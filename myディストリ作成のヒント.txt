@@ -1,0 +1,78 @@
+1.準備
+インストーラーのcalamaresとiso再構築ツールのremastersysをインストールする。
+
+sudo dpkg -i /etc/basix/pkgs/calamares-settings-debian_11.0.5-2-basix2_all.deb
+sudo gdebi /etc/basix/pkgs/remastersys-debian-basix_3.10.19-1_all.deb
+
+2.ディストリビューションの設定
+[/etc/basix/os-release]を修正
+PRETTY_NAMEだけを変更しあとはいじらない。
+PRETTY_NAME="Basix de 2.0/x86_64" -> myディストリ名に変更する
+このファイルは起動時/etc/os-releaseを上書きする。
+
+3.remsastersysのカスタマイズ
+[/etc/remastersys.conf]の修正
+LIVEUSER="basix" -> ライブ起動したときのユーザー名を指定
+LIVECDLABEL="Basix de" -> ライブCD/DVDのラベル名
+CUSTUMISO="basix-de.iso" -> isoファイル名を省略したときのデフォルトのファイル名
+
+[/etc/skel/install-debian.desktop]の修正
+Name=Install Basix de 2.0 -> デスクトップ上のインストーラーの英語名
+Name[ja]=Basix de 2.0 インストーラー -> デスクトップ上のインストーラーの日本語名(実際はこれが表示される)
+
+/etc/apt/sources.listは起動時/etc/basix/sources.listを上書きするので独自のリポジトリを追加するときは/etc/basix/sources.listを修正する。
+通常は/etc/apt/sources.list.dに~.listファイルを追加した方がスマート。
+
+4.calamaresインストーラーのカスタマイズ
+[/etc/calamares/branding/debian/branding.desc]の編集
+productName, shortProductName, version, ShortVersion, ShortVersionNameを自分のディストリに合ったものに変更する。
+
+[/etc/calamares/modules/welcome.conf]の編集
+requiredStorage, requiredRamを変更
+ディストリに合わせて要求するディスク容量(GB)と要求するメモリー(GB)を変更する。
+
+[/etc/calamares/branding/debian/welcome.png]の変更
+ディストリの紹介画像（なんでもいい）
+[/etc/calamares/branding/debian/slide1.png]の変更
+インストール中に表示される画像
+
+5.ブートスプラッシュのカスタマイズ
+[/usr/share/plymouth/themes/homeworld/debian.png]の変更
+ブート中に表示されるディストリのロゴ
+変更を反映するためにsudo update-initramfs -uを実行する。
+
+6.設定情報のコピー
+remastersysはホームの内容をisoファイルに入れない。
+ホームにはパスワードなど個人情報が含まれているからです。
+しかしデスクトップやアプリの設定した情報がホームに含まれているのでこれれはisoファイルに入れないといけない。
+そういう情報は/etc/skelにコピーしておけばいい。
+ライブ起動時に/etc/skelのデータはホームに自動的にコピーされる。
+設定情報はホームの.configに多く存在しているがすべて/etc/skelにコピーするのでなく最低限にすべきである。
+Basixでは
+autostart, dconf , lxsession, lxpnel, pcmanfm, openbox, xfce4, pulseにしている。
+DEによって変わってくる。
+
+必要に応じて/etc/basix/initdesktop.shを修正
+
+7.isoファイルの作成
+必要とする空きディスク容量はisoファイルの２倍以上である。
+
+・isoファイルの作成
+接続の編集を開いて無線LANを削除する。
+
+sudo /etc/basix/remastersys.sh isoファイル名
+
+非常に時間ががかかる。
+isoファイルは/home/remastersys/remastersysに作成される。
+
+注意
+・4GBを超えるisoファイルの作成
+isoファイルが4GBを超えるとremastersysがエラーとする。
+4GB以上のisoファイルを作成するにはremastersysを修正する。
+/usr/bin/renastersysの525行目をコメントにする。
+elif [[ "$SQUASHFSSIZE" -gt "3999999" && "$CREATEISO" = "/usr/bin/genisoimage" ]] ; then
+↓
+#elif [[ "$SQUASHFSSIZE" -gt "3999999" && "$CREATEISO" = "/usr/bin/genisoimage" ]] ; then
+
+・ライブ起動しない
+プロンプトが出て止まるときはliveと入力するとbootがはじまる。
