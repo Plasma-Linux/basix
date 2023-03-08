@@ -1,0 +1,5 @@
+#!/bin/bash
+gksudo() {
+  pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY $*
+}
+gksudo $*
